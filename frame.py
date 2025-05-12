@@ -9,39 +9,6 @@ from wordcloud import WordCloud
 import re
 
 # ------------------- 配置参数 -------------------
-# 此字典包含了程序运行所需的各种配置信息
-CONFIG = {
-    # 京东WIFI6路由器搜索页面的URL
-    "JD_URL": "https://search.jd.com/Search?keyword=WIFI6路由器",
-    # 天猫WIFI6路由器搜索页面的URL
-    "TMALL_URL": "https://list.tmall.com/search_product.htm?q=WIFI6路由器",
-    # 模拟浏览器的用户代理字符串
-    "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    # 数据库连接配置信息
-    "DB_CONFIG": {
-        "host": "localhost",
-        "user": "your_username",
-        "password": "your_password",
-        "database": "router_db",
-        "charset": "utf8mb4"
-    },
-    # 自定义关键词库，用于标记产品的优点
-    "POSITIVE_KEYWORDS": {"信号强", "速度快", "稳定", "穿墙好", "覆盖广", "易设置", "颜值高"},
-    # 自定义关键词库，用于标记产品的缺点
-    "NEGATIVE_KEYWORDS": {"断流", "发热", "信号差", "速度慢", "难设置", "性价比低", "不稳定"}
-}
-
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-import jieba
-import pymysql
-from collections import defaultdict
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-import re
-
-# ------------------- 配置参数 -------------------
 CONFIG = {
     "JD_URL": "https://search.jd.com/Search?keyword=WIFI6路由器",  # 京东搜索URL
     "TMALL_URL": "https://list.tmall.com/search_product.htm?q=WIFI6路由器",  # 天猫搜索URL
