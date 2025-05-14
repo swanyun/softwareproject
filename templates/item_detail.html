@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ item.name }} - 商品详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_detail.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ item.name }}</h1>
+
+        <div class="item-summary">
+            <div class="item-info-main">
+                <div class="info-block">
+                    <span class="label">品牌</span>
+                    <span class="value brand">{{ item.brand }}</span>
+                </div>
+                <div class="info-block">
+                    <span class="label">类别</span>
+                    <span class="value category">{{ item.category }}</span>
+                </div>
+                <div class="info-block">
+                    <span class="label">库存状态</span>
+                    <span class="value stock-{{ item.stock_status|lower|replace(' ', '-') }}">{{ item.stock_status }}</span>
+                </div>
+            </div>
+             <div class="item-info-scores">
+                <div class="info-block">
+                    <span class="label">价格</span>
+                    <span class="value price">¥{{ "%.2f"|format(item.price) }}</span>
+                </div>
+                <div class="info-block">
+                    <span class="label">规格评分</span>
+                    <span class="value score">{{ "%.1f"|format(item.spec_score) }}/10</span>
+                </div>
+                <div class="info-block">
+                    <span class="label">评论评分</span>
+                    <span class="value score">{{ "%.1f"|format(item.review_score) }}/5</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-details-section">
+            <h2>产品描述与规格</h2>
+            <div class="product-description">
+                <h3>产品简介</h3>
+                <p>{{ item.description }}</p>
+            </div>
+
+            <div class="product-specs">
+                <h3>详细规格</h3>
+                <ul class="specs-list">
+                    <li><strong>发布日期:</strong> {{ item.release_date }}</li>
+                    <li><strong>产品尺寸:</strong> {{ item.dimensions }}</li>
+                    <li><strong>产品重量:</strong> {{ item.weight }}</li>
+                    <li><strong>主要材质:</strong> {{ item.material }}</li>
+                    <li>
+                        <strong>可选颜色:</strong>
+                        {% for color in item.color_options %}
+                            <span class="color-tag">{{ color }}</span>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </li>
+                    <li>
+                        <strong>主要特性:</strong>
+                        <ul>
+                            {% for feature in item.features %}
+                                <li>{{ feature }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+
+        <div class="reviews-section">
+            <h2>用户评价</h2>
+            <div class="reviews-container">
+                <div class="review-column good-reviews">
+                    <h3>好评反馈 ({{ item.good_reviews|length }})</h3>
+                    <ul class="review-list">
+                        {% if item.good_reviews %}
+                            {% for review in item.good_reviews %}
+                                <li>{{ review }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>暂无好评</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="review-column bad-reviews">
+                    <h3>待改进 ({{ item.bad_reviews|length }})</h3>
+                    <ul class="review-list">
+                        {% if item.bad_reviews %}
+                            {% for review in item.bad_reviews %}
+                                <li>{{ review }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>暂无差评</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-button-container">
+        <a href="{{ back_url }}" class="back-button">返回列表</a>
+    </div>
+</body>
+</html>

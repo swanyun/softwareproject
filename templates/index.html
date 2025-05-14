@@ -1,0 +1,400 @@
+--- START OF FILE index.html ---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目数据分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_index.css') }}">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="搜索项目名称..." autocomplete="off">
+            <button id="search-button">搜索</button>
+            <div class="search-suggestions" id="search-suggestions-list">
+                </div>
+        </div>
+    </div>
+
+    <div class="app-shell">
+        <div class="main-container">
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>价格分布</h3>
+                    <div class="chart-canvas-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>规格评分</h3>
+                    <div class="chart-canvas-container">
+                        <canvas id="specScoreChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>评论评分</h3>
+                    <div class="chart-canvas-container">
+                        <canvas id="reviewScoreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ranking-container">
+                <h2 id="ranking-container-title">项目排行榜</h2>
+                <div class="ranking-content">
+                    <form method="GET" action="{{ url_for('index') }}" class="sort-options" id="sort-form">
+                        <label for="sort_by">排序依据:</label>
+                        <select name="sort_by" id="sort_by">
+                            <option value="spec_score" {% if current_sort_key == 'spec_score' %}selected{% endif %}>规格评分 (高到低)</option>
+                            <option value="review_score" {% if current_sort_key == 'review_score' %}selected{% endif %}>评论评分 (高到低)</option>
+                            <option value="price_asc" {% if current_sort_key == 'price_asc' %}selected{% endif %}>价格 (低到高)</option>
+                            <option value="price_desc" {% if current_sort_key == 'price_desc' %}selected{% endif %}>价格 (高到低)</option>
+                        </select>
+                        <button type="submit">应用排序</button>
+                    </form>
+                    <p class="current-sort-info">当前排序: <strong id="current-sort-text">{{ current_sort_criteria }}</strong></p>
+
+                    <div class="ranking-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>项目名称</th>
+                                    <th>价格 (元)</th>
+                                    <th>规格分</th>
+                                    <th>评论分</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ranking-table-body">
+                                {% for item in ranked_items %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="item-name-link">{{ item.name }}</a>
+                                    </td>
+                                    <td>¥{{ "%.2f"|format(item.price) }}</td>
+                                    <td>{{ "%.1f"|format(item.spec_score) }}</td>
+                                    <td>{{ "%.1f"|format(item.review_score) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="search-results-display-area">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 全局配置和数据 ---
+        Chart.defaults.font.family = 'Poppins, sans-serif';
+        Chart.defaults.color = '#555';
+        Chart.defaults.borderColor = '#ddd';
+
+        const allItemsData = JSON.parse('{{ all_items_json | tojson | safe }}');
+        let currentRankedItems = JSON.parse('{{ ranked_items | tojson | safe }}');
+        let currentSortKeyGlobal = '{{ current_sort_key }}';
+        let currentSortCriteriaGlobal = '{{ current_sort_criteria }}';
+        const itemDetailUrlBase = "{{ url_for('item_detail', item_id='ITEM_ID_PLACEHOLDER') }}";
+        const chartColors = {
+            price: { background: 'rgba(255, 99, 132, 0.6)', border: 'rgba(255, 99, 132, 1)' },
+            specScore: { background: 'rgba(54, 162, 235, 0.6)', border: 'rgba(54, 162, 235, 1)' },
+            reviewScore: { background: 'rgba(75, 192, 192, 0.6)', border: 'rgba(75, 192, 192, 1)' }
+        };
+
+        // --- DOM 元素获取 ---
+        let searchInput, searchButton, searchSuggestionsList,
+            rankingTableBody, searchResultsDisplayArea, rankingContainerDiv,
+            rankingTableWrapper, sortOptionsForm, sortBySelect, currentSortTextElement,
+            rankingContainerTitleElement; // 新增：排行榜标题元素
+
+        let suggestionItems = [];
+        let activeSuggestionIndex = -1;
+        let searchContainer; // 将 searchContainer 移到全局，以便在 DOMContentLoaded 中赋值
+
+
+        // --- 核心功能函数 ---
+        function formatPrice(price) { return `¥${parseFloat(price).toFixed(2)}`; }
+        function formatScore(score, maxScore = "") {
+            const parsedScore = parseFloat(score);
+            return `${isNaN(parsedScore) ? 'N/A' : parsedScore.toFixed(1)}${maxScore ? '/' + maxScore : ''}`;
+        }
+
+        function renderRankingTable(itemsToRender) {
+            if (!rankingTableBody) return;
+            rankingTableBody.innerHTML = '';
+            rankingTableBody.classList.add('fade-out');
+            setTimeout(() => {
+                if (!itemsToRender || itemsToRender.length === 0) {
+                    const row = rankingTableBody.insertRow();
+                    const cell = row.insertCell(); cell.colSpan = 5;
+                    cell.textContent = "没有可显示的项目。"; cell.style.textAlign = "center";
+                } else {
+                    itemsToRender.forEach((item, index) => {
+                        const row = rankingTableBody.insertRow();
+                        row.insertCell().textContent = index + 1;
+                        const nameCell = row.insertCell();
+                        const link = document.createElement('a');
+                        link.href = itemDetailUrlBase.replace('ITEM_ID_PLACEHOLDER', item.id);
+                        link.textContent = item.name; link.classList.add('item-name-link');
+                        nameCell.appendChild(link);
+                        row.insertCell().textContent = formatPrice(item.price);
+                        row.insertCell().textContent = formatScore(item.spec_score);
+                        row.insertCell().textContent = formatScore(item.review_score);
+                    });
+                }
+                rankingTableBody.classList.remove('fade-out');
+                rankingTableBody.classList.add('fade-in');
+                setTimeout(() => rankingTableBody.classList.remove('fade-in'), 400);
+            }, 300);
+        }
+
+        function displayFinalSearchResults(results, searchTerm) { // 增加 searchTerm 参数
+            if (!searchResultsDisplayArea || !rankingTableWrapper || !sortOptionsForm || !rankingContainerDiv || !rankingContainerTitleElement) return;
+
+            searchResultsDisplayArea.innerHTML = '';
+            const hasResults = results && results.length > 0;
+            const isSearching = searchTerm && searchTerm.trim() !== "";
+
+            rankingTableWrapper.style.display = (isSearching && hasResults) ? 'none' : 'block';
+            sortOptionsForm.style.display = (isSearching && hasResults) ? 'none' : 'block';
+            document.querySelector('.current-sort-info').style.display = (isSearching && hasResults) ? 'none' : 'block';
+
+            if (isSearching) { // 只有在实际执行搜索时才改变标题和激活状态
+                if (hasResults) {
+                    rankingContainerTitleElement.textContent = "搜索结果";
+                    rankingContainerDiv.classList.add('search-active');
+                    results.forEach((item, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('search-result-item');
+                        itemDiv.innerHTML = `
+                            <h4>${item.name}</h4>
+                            <p class="price">价格: ${formatPrice(item.price)}</p>
+                            <p class="scores">
+                                <span class="label">规格分:</span> <span class="value">${formatScore(item.spec_score, 10)}</span>
+                                <span class="label">评论分:</span> <span class="value">${formatScore(item.review_score, 5)}</span>
+                            </p>
+                        `;
+                        itemDiv.addEventListener('click', () => {
+                            window.location.href = itemDetailUrlBase.replace('ITEM_ID_PLACEHOLDER', item.id);
+                        });
+                        searchResultsDisplayArea.appendChild(itemDiv);
+                        setTimeout(() => {
+                            itemDiv.style.opacity = '1';
+                            itemDiv.style.transform = 'translateY(0)';
+                        }, index * 50);
+                    });
+                    searchResultsDisplayArea.style.display = 'block';
+                } else { // 搜索了但无结果
+                    rankingContainerTitleElement.textContent = "搜索结果"; // 仍然显示搜索结果标题
+                    rankingContainerDiv.classList.add('search-active'); // 保持搜索激活状态以隐藏排行榜
+                    searchResultsDisplayArea.innerHTML = '<p style="text-align:center; padding:20px;">未找到相关项目。</p>';
+                    searchResultsDisplayArea.style.display = 'block';
+                    rankingTableWrapper.style.display = 'none'; // 确保排行榜隐藏
+                    sortOptionsForm.style.display = 'none';
+                    document.querySelector('.current-sort-info').style.display = 'none';
+                }
+            } else { // 非搜索状态 (例如清空搜索框后)
+                rankingContainerTitleElement.textContent = "项目排行榜";
+                rankingContainerDiv.classList.remove('search-active');
+                searchResultsDisplayArea.style.display = 'none';
+                renderRankingTable(currentRankedItems); // 显示排行榜
+                rankingTableWrapper.style.display = 'block';
+                sortOptionsForm.style.display = 'block';
+                document.querySelector('.current-sort-info').style.display = 'block';
+            }
+            searchSuggestionsList.style.display = 'none';
+        }
+
+        function updateSearchSuggestions(searchTerm) {
+            if (!searchSuggestionsList) return;
+            searchSuggestionsList.innerHTML = '';
+            activeSuggestionIndex = -1;
+            suggestionItems = [];
+
+            if (searchTerm === '') {
+                searchSuggestionsList.style.display = 'none';
+                return;
+            }
+
+            const filtered = allItemsData.filter(item =>
+                item.name && item.name.toLowerCase().includes(searchTerm)
+            ).slice(0, 7);
+
+            if (filtered.length > 0) {
+                const ul = document.createElement('ul');
+                filtered.forEach((item) => {
+                    const li = document.createElement('li');
+                    li.textContent = item.name;
+                    li.dataset.itemId = item.id;
+                    li.addEventListener('click', () => {
+                        searchInput.value = item.name; // 为用户体验保留：用所选项目名称填充输入框
+                        searchSuggestionsList.style.display = 'none'; // 隐藏建议列表
+                        const detailUrl = itemDetailUrlBase.replace('ITEM_ID_PLACEHOLDER', item.id);
+                        window.location.href = detailUrl; // 跳转到商品详情页
+                    });
+                    ul.appendChild(li);
+                    suggestionItems.push(li);
+                });
+                searchSuggestionsList.appendChild(ul);
+                searchSuggestionsList.style.display = 'block';
+            } else {
+                searchSuggestionsList.style.display = 'none';
+            }
+        }
+
+        function executeSearch() {
+            if (!searchInput) return;
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            searchSuggestionsList.style.display = 'none';
+
+            if (searchTerm === '') {
+                displayFinalSearchResults(null, ""); // 传递空搜索词表示清除搜索状态
+                return;
+            }
+
+            const finalResults = allItemsData.filter(item =>
+                item.name && item.name.toLowerCase().includes(searchTerm)
+            );
+            displayFinalSearchResults(finalResults, searchTerm); // 传递搜索词
+        }
+
+        function handleSort() {
+            if(!sortBySelect || !currentSortTextElement || !rankingContainerTitleElement) return;
+            const newSortBy = sortBySelect.value;
+            let sortedItems = [...allItemsData];
+            let newSortCriteria = "";
+
+            switch (newSortBy) {
+                case 'review_score': sortedItems.sort((a, b) => b.review_score - a.review_score); newSortCriteria = "评论评分"; break;
+                case 'price_asc': sortedItems.sort((a, b) => a.price - b.price); newSortCriteria = "价格 (低到高)"; break;
+                case 'price_desc': sortedItems.sort((a, b) => b.price - a.price); newSortCriteria = "价格 (高到低)"; break;
+                case 'spec_score': default: sortedItems.sort((a, b) => b.spec_score - a.spec_score); newSortCriteria = "规格评分"; break;
+            }
+            currentRankedItems = sortedItems;
+            currentSortKeyGlobal = newSortBy;
+            currentSortCriteriaGlobal = newSortCriteria;
+            currentSortTextElement.textContent = newSortCriteria;
+
+            rankingContainerTitleElement.textContent = "项目排行榜";
+            rankingContainerDiv.classList.remove('search-active');
+            searchResultsDisplayArea.style.display = 'none';
+            searchResultsDisplayArea.innerHTML = '';
+            rankingTableWrapper.style.display = 'block';
+            sortOptionsForm.style.display = 'block';
+            document.querySelector('.current-sort-info').style.display = 'block';
+            renderRankingTable(currentRankedItems);
+        }
+
+        let charts = {};
+        function createBarChart(canvasId, label, data, chartColorsObj, yAxisLabel = '', xAxisLabelRotation = 45) {
+            const canvasElement = document.getElementById(canvasId);
+            if (!canvasElement) { console.error(`Canvas element with id ${canvasId} not found.`); return; }
+            const ctx = canvasElement.getContext('2d');
+            if (charts[canvasId]) { charts[canvasId].destroy(); }
+            const itemNamesForChart = allItemsData.map(item => item.name || "未命名项目");
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: itemNamesForChart, datasets: [{ label: label, data: data, backgroundColor: chartColorsObj.background, borderColor: chartColorsObj.border, borderWidth: 1, borderRadius: 5, barPercentage: 0.6, categoryPercentage: 0.7 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#e9ecef' }, ticks: { color: '#495057', callback: function(value) { if (canvasId === 'priceChart') return '¥' + value.toLocaleString(); return value; } }, title: { display: !!yAxisLabel, text: yAxisLabel, font: { size: 13, weight: '500' }, color: '#34495e', padding: { top: 0, bottom: 10 } } }, x: { grid: { display: false }, ticks: { color: '#495057', autoSkip: true, maxRotation: xAxisLabelRotation, minRotation: Math.min(30, xAxisLabelRotation), font: {size: 10} } } }, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#34495e', font: { size: 12 }, usePointStyle: true, boxWidth: 10, padding: 15 } }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.85)', titleFont: { size: 14, weight: 'bold' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 6, displayColors: true, callbacks: { label: function(context) { let labelText = context.dataset.label || ''; if (labelText) labelText += ': '; if (context.parsed.y !== null) { if (canvasId === 'priceChart') { labelText += '¥' + context.parsed.y.toLocaleString(); } else { labelText += context.parsed.y; } } return labelText; } } } }, layout: { padding: { top: 10, right: 10, bottom: 0, left: 10 } }, animation: { duration: 800, easing: 'easeInOutQuart' } }
+            });
+        }
+        function initializeCharts() {
+             if (!allItemsData || allItemsData.length === 0) { console.warn("No data available for charts."); return; }
+            const prices = allItemsData.map(item => item.price);
+            const specScores = allItemsData.map(item => item.spec_score);
+            const reviewScores = allItemsData.map(item => item.review_score);
+            createBarChart('priceChart', '价格', prices, chartColors.price, '金额 (元)', 60);
+            createBarChart('specScoreChart', '规格评分', specScores, chartColors.specScore, '评分 (10分制)', 60);
+            createBarChart('reviewScoreChart', '评论评分', reviewScores, chartColors.reviewScore, '评分 (5分制)', 60);
+        }
+
+        function updateSuggestionHighlight() {
+            suggestionItems.forEach((item, index) => {
+                item.classList.toggle('active', index === activeSuggestionIndex);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            searchInput = document.getElementById('search-input');
+            searchButton = document.getElementById('search-button');
+            searchSuggestionsList = document.getElementById('search-suggestions-list');
+            rankingTableBody = document.getElementById('ranking-table-body');
+            searchResultsDisplayArea = document.getElementById('search-results-display-area');
+            rankingContainerDiv = document.querySelector('.ranking-container');
+            rankingContainerTitleElement = document.getElementById('ranking-container-title');
+            rankingTableWrapper = document.querySelector('.ranking-table-wrapper');
+            sortOptionsForm = document.getElementById('sort-form');
+            sortBySelect = document.getElementById('sort_by');
+            currentSortTextElement = document.getElementById('current-sort-text');
+            searchContainer = document.querySelector('.search-container');
+
+
+            if (!allItemsData || allItemsData.length === 0) {
+                console.error("allItemsData is empty or not loaded correctly!");
+                if(rankingTableBody) {
+                    const row = rankingTableBody.insertRow(); const cell = row.insertCell();
+                    cell.colSpan = 5; cell.textContent = "数据加载失败。";
+                    cell.style.textAlign = "center"; cell.style.color = "red";
+                }
+            }
+            initializeCharts();
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    const term = searchInput.value.toLowerCase().trim();
+                    updateSearchSuggestions(term);
+                });
+                searchInput.addEventListener('keydown', (e) => {
+                    if (searchSuggestionsList.style.display !== 'block' || suggestionItems.length === 0) {
+                         if (e.key === 'Enter') {
+                            e.preventDefault();
+                            executeSearch();
+                        }
+                        return;
+                    }
+
+                    if (e.key === 'ArrowDown') { e.preventDefault(); activeSuggestionIndex = (activeSuggestionIndex + 1) % suggestionItems.length; updateSuggestionHighlight(); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); activeSuggestionIndex = (activeSuggestionIndex - 1 + suggestionItems.length) % suggestionItems.length; updateSuggestionHighlight(); }
+                    else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeSuggestionIndex > -1 && suggestionItems[activeSuggestionIndex]) {
+                            // 如果有建议项被高亮，则“点击”它（将会导航）
+                            suggestionItems[activeSuggestionIndex].click();
+                        } else {
+                            // 否则（没有建议项高亮，或用户只是输入后按回车），
+                            // 基于输入框内容执行搜索
+                            executeSearch();
+                        }
+                    } else if (e.key === 'Escape') { searchSuggestionsList.style.display = 'none'; }
+                });
+            }
+            if (searchButton) { searchButton.addEventListener('click', executeSearch); }
+            if (sortOptionsForm) {
+                sortOptionsForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    handleSort();
+                });
+            }
+            if (searchContainer) {
+                 document.addEventListener('click', function(event) {
+                    if (searchSuggestionsList && !searchContainer.contains(event.target)) {
+                        searchSuggestionsList.style.display = 'none';
+                    }
+                });
+            }
+
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const sortByParam = urlParams.get('sort_by');
+            if (sortByParam && sortBySelect) { sortBySelect.value = sortByParam; }
+        });
+    </script>
+</body>
+</html>

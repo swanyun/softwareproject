@@ -1,0 +1,280 @@
+/* CSS for item_detail.html */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 900px;
+    width: 100%;
+    margin: 20px auto;
+    flex-grow: 1;
+}
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 2em;
+    font-weight: 600;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+/* Item Summary Section */
+.item-summary {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column; /* 主信息和评分信息垂直排列 */
+    gap: 15px;
+}
+.item-info-main, .item-info-scores {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.info-block {
+    text-align: center;
+    margin: 10px 15px;
+    min-width: 120px; /* 给每个信息块一个最小宽度 */
+}
+.info-block .label {
+    display: block;
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+.info-block .value {
+    font-size: 1.2em; /* 调整value字体大小 */
+    font-weight: 600;
+    color: #333;
+}
+.info-block .value.price {
+    color: #e74c3c;
+    font-size: 1.4em;
+}
+.info-block .value.score {
+    color: #007bff;
+}
+.info-block .value.brand, .info-block .value.category {
+    color: #17a2b8; /* 品牌和类别用青色 */
+}
+/* 库存状态样式 */
+.info-block .value.stock-库存充足 { color: #28a745; }
+.info-block .value.stock-少量库存 { color: #ffc107; }
+.info-block .value.stock-预售中 { color: #fd7e14; }
+.info-block .value.stock-暂时缺货 { color: #dc3545; }
+
+
+/* Product Details Section */
+.product-details-section {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+.product-details-section h2 {
+    font-size: 1.6em;
+    color: #34495e;
+    margin-bottom: 20px;
+    text-align: left;
+    border-bottom: 2px solid #17a2b8; /* 详情区标题用青色下划线 */
+    padding-bottom: 8px;
+}
+.product-description h3, .product-specs h3 {
+    font-size: 1.3em;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+.product-description p {
+    line-height: 1.7;
+    color: #555;
+    margin-bottom: 20px;
+}
+.specs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.specs-list > li { /* 直接子元素li */
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95em;
+    color: #444;
+}
+.specs-list > li:last-child {
+    border-bottom: none;
+}
+.specs-list strong {
+    color: #333;
+    min-width: 100px; /* 让标签对齐一点 */
+    display: inline-block;
+}
+.specs-list ul { /* 特性列表的内嵌ul */
+    list-style: disc;
+    padding-left: 25px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.specs-list ul li {
+    padding: 3px 0;
+    font-size: 0.9em;
+    color: #555;
+}
+.color-tag {
+    display: inline-block;
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* Reviews Section */
+.reviews-section {
+    margin-top: 30px;
+}
+.reviews-section h2 { /* 用户评价标题 */
+    font-size: 1.6em;
+    color: #34495e;
+    margin-bottom: 20px;
+    text-align: left;
+    border-bottom: 2px solid #007bff; /* 评论区标题用蓝色下划线 */
+    padding-bottom: 8px;
+}
+.reviews-container {
+    display: flex;
+    gap: 30px;
+}
+.review-column {
+    flex: 1;
+    background-color: #fdfdfd;
+    padding: 20px; /* 增加内边距 */
+    border-radius: 8px;
+    border: 1px solid #e7e7e7;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 轻微阴影 */
+}
+.review-column h3 {
+    font-size: 1.2em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #4CAF50;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+.review-column.bad-reviews h3 {
+    color: #F44336;
+}
+.review-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.review-list li {
+    padding: 12px 0; /* 增加评论条目间距 */
+    border-bottom: 1px dashed #eee;
+    font-size: 0.95em;
+    line-height: 1.6;
+    color: #444; /* 评论文字颜色 */
+}
+.review-list li:last-child {
+    border-bottom: none;
+}
+
+/* Back Button */
+.back-button-container {
+    text-align: right;
+    padding: 10px 20px; /* 移除 margin-top, 因为 body flex-grow会处理空间 */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.back-button {
+    padding: 12px 25px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+.back-button:hover {
+    background-color: #5a6268;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px auto;
+    }
+    h1 {
+        font-size: 1.6em; /* 缩小标题 */
+    }
+    .item-summary {
+        padding: 15px;
+    }
+    .item-info-main, .item-info-scores {
+        flex-direction: column; /* 小屏幕上信息块垂直排列 */
+        align-items: flex-start; /* 左对齐 */
+    }
+    .info-block {
+        margin: 8px 0; /* 调整垂直间距 */
+        text-align: left;
+        min-width: unset;
+    }
+    .info-block .value {
+        font-size: 1.1em;
+    }
+     .info-block .value.price {
+        font-size: 1.3em;
+    }
+    .product-details-section h2, .reviews-section h2 {
+        font-size: 1.4em;
+    }
+    .product-description h3, .product-specs h3, .review-column h3 {
+        font-size: 1.1em;
+    }
+    .reviews-container {
+        flex-direction: column;
+    }
+    .review-column {
+        padding: 15px;
+    }
+}
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+    }
+    h1 {
+        font-size: 1.4em;
+    }
+}
