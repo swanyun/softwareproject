@@ -3,83 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ item.name }} - 商品详情</title>
+    <title>{{ item.name if item.name else "商品详情" }} - 商品详情</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_detail.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>{{ item.name }}</h1>
+        <h1>{{ item.name if item.name else '-- 无标题 --' }}</h1>
 
         <div class="item-summary">
             <div class="item-info-main">
                 <div class="info-block">
                     <span class="label">品牌</span>
-                    <span class="value brand">{{ item.brand }}</span>
+                    <span class="value brand">{{ item.brand if item.brand and item.brand|string|lower != 'none' and item.brand|string|lower != 'null' else '--' }}</span>
                 </div>
                 <div class="info-block">
                     <span class="label">类别</span>
-                    <span class="value category">{{ item.category }}</span>
-                </div>
-                <div class="info-block">
-                    <span class="label">库存状态</span>
-                    <span class="value stock-{{ item.stock_status|lower|replace(' ', '-') }}">{{ item.stock_status }}</span>
+                    <span class="value category">{{ item.category if item.category and item.category|string|lower != 'none' and item.category|string|lower != 'null' else '--' }}</span>
                 </div>
             </div>
              <div class="item-info-scores">
                 <div class="info-block">
                     <span class="label">价格</span>
-                    <span class="value price">¥{{ "%.2f"|format(item.price) }}</span>
+                    <span class="value price">
+                        {% if item.price is not none %}
+                            ¥{{ "%.2f"|format(item.price) }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="info-block">
                     <span class="label">规格评分</span>
-                    <span class="value score">{{ "%.1f"|format(item.spec_score) }}/10</span>
+                    <span class="value score">
+                        {% if item.spec_score is not none %}
+                            {{ "%.1f"|format(item.spec_score) }}/10
+                        {% else %}
+                            --
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="info-block">
                     <span class="label">评论评分</span>
-                    <span class="value score">{{ "%.1f"|format(item.review_score) }}/5</span>
+                    <span class="value score">
+                        {% if item.review_score is not none %}
+                            {{ "%.1f"|format(item.review_score) }}/5
+                        {% else %}
+                            --
+                        {% endif %}
+                    </span>
                 </div>
             </div>
         </div>
 
         <div class="product-details-section">
-            <h2>产品描述与规格</h2>
-            <div class="product-description">
-                <h3>产品简介</h3>
-                <p>{{ item.description }}</p>
-            </div>
-
+            <h2>产品规格</h2>
             <div class="product-specs">
                 <h3>详细规格</h3>
                 <ul class="specs-list">
-                    <li><strong>发布日期:</strong> {{ item.release_date }}</li>
-                    <li><strong>产品尺寸:</strong> {{ item.dimensions }}</li>
-                    <li><strong>产品重量:</strong> {{ item.weight }}</li>
-                    <li><strong>主要材质:</strong> {{ item.material }}</li>
-                    <li>
-                        <strong>可选颜色:</strong>
-                        {% for color in item.color_options %}
-                            <span class="color-tag">{{ color }}</span>{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </li>
+                    <li><strong>商品ID:</strong> {{ item.id if item.id else '--' }}</li>
+                    <li><strong>发布日期:</strong> {{ item.release_date if item.release_date and item.release_date|string|lower != 'none' and item.release_date|string|lower != 'null' else '--' }}</li>
+                    <li><strong>产品尺寸:</strong> {{ item.dimensions if item.dimensions and item.dimensions|string|lower != 'none' and item.dimensions|string|lower != 'null' else '--' }}</li>
+                    <li><strong>产品重量:</strong> {{ item.weight if item.weight and item.weight|string|lower != 'none' and item.weight|string|lower != 'null' else '--' }}</li>
+                    <li><strong>主要材质:</strong> {{ item.material if item.material and item.material|string|lower != 'none' and item.material|string|lower != 'null' else '--' }}</li>
+                    <li><strong>LAN输出口:</strong> {{ item.lan_output if item.lan_output and item.lan_output|string|lower != 'none' and item.lan_output|string|lower != 'null' else '--' }}</li>
+                    <li><strong>天线:</strong> {{ item.antenna if item.antenna and item.antenna|string|lower != 'none' and item.antenna|string|lower != 'null' else '--' }}</li>
+                    <li><strong>WAN接入口:</strong> {{ item.wan_input if item.wan_input and item.wan_input|string|lower != 'none' and item.wan_input|string|lower != 'null' else '--' }}</li>
+                    <li><strong>供电方式:</strong> {{ item.power_supply if item.power_supply and item.power_supply|string|lower != 'none' and item.power_supply|string|lower != 'null' else '--' }}</li>
+                    <li><strong>LAN口数量:</strong> {{ item.lan_ports_count if item.lan_ports_count and item.lan_ports_count|string|lower != 'none' and item.lan_ports_count|string|lower != 'null' else '--' }}</li>
+                    <li><strong>企业VPN:</strong> {{ item.vpn_support if item.vpn_support and item.vpn_support|string|lower != 'none' and item.vpn_support|string|lower != 'null' else '--' }}</li>
                     <li>
                         <strong>主要特性:</strong>
+                        {% if item.features and item.features|length > 0 %}
                         <ul>
                             {% for feature in item.features %}
                                 <li>{{ feature }}</li>
                             {% endfor %}
                         </ul>
+                        {% else %}
+                            --
+                        {% endif %}
+                    </li>
+                    <li><strong>包装清单:</strong>
+                        <p style="white-space: pre-wrap;">{{ item.packaging_list if item.packaging_list and item.packaging_list|string|lower != 'none' and item.packaging_list|string|lower != 'null' else '--' }}</p>
                     </li>
                 </ul>
             </div>
         </div>
 
-
         <div class="reviews-section">
-            <h2>用户评价</h2>
+            <h2>用户评价 (示例)</h2>
             <div class="reviews-container">
                 <div class="review-column good-reviews">
-                    <h3>好评反馈 ({{ item.good_reviews|length }})</h3>
+                    <h3>好评反馈 ({{ item.good_reviews|length if item.good_reviews else '0' }})</h3>
                     <ul class="review-list">
                         {% if item.good_reviews %}
                             {% for review in item.good_reviews %}
@@ -91,14 +107,14 @@
                     </ul>
                 </div>
                 <div class="review-column bad-reviews">
-                    <h3>待改进 ({{ item.bad_reviews|length }})</h3>
+                    <h3>待改进 ({{ item.bad_reviews|length if item.bad_reviews else '0' }})</h3>
                     <ul class="review-list">
                         {% if item.bad_reviews %}
                             {% for review in item.bad_reviews %}
                                 <li>{{ review }}</li>
                             {% endfor %}
                         {% else %}
-                            <li>暂无差评</li>
+                            <li>暂无此类反馈</li>
                         {% endif %}
                     </ul>
                 </div>

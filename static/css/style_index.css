@@ -1,19 +1,18 @@
-/* CSS for index.html */
+/* ... (之前的 CSS 直到 .ranking-section-right) ... */
 html {
-    height: 100%; /* 确保 html 元素占据视口高度 */
+    height: 100%; /* 确保html元素占据整个视口高度 */
 }
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #f0f2f5;
     color: #333;
-    display: flex;
-    flex-direction: column;
+    display: flex;          /* 使用flex布局，方便垂直排列 top-bar 和 app-shell */
+    flex-direction: column; /* 子元素垂直排列 */
     margin: 0;
-    min-height: 100%; /* 确保 body 至少和视口一样高 */
-    /* 移除 overflow: hidden; 以允许 body 滚动 */
+    height: 100vh;          /* 已修改: 强制body高度为视口高度 (viewport height) */
+    overflow: hidden;       /* 已修改: 防止body本身出现滚动条，所有滚动应在内部容器控制 */
 }
 
-/* --- 顶部搜索栏 --- */
 .top-bar {
     background-color: #ffffff;
     padding: 15px 25px;
@@ -22,19 +21,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0;
-    position: sticky; /* 让搜索栏在滚动时固定在顶部 */
-    top: 0;
+    flex-shrink: 0;     /* 防止顶部栏在内容过多时被压缩 */
+    position: sticky;   /* 使顶部搜索栏在页面滚动时（如果body允许滚动的话）固定在顶部 */
+    top: 0;             /* 固定在顶部 */
 }
-
 .search-container {
     width: 100%;
     max-width: 600px;
-    position: relative; /* 为了下拉建议的定位 */
+    position: relative;
     display: flex;
     align-items: center;
 }
-
 #search-input {
     flex-grow: 1;
     padding: 12px 20px;
@@ -47,14 +44,12 @@ body {
     box-sizing: border-box;
     margin-right: -1px;
 }
-
 #search-input:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 2px 8px rgba(0,123,255,0.2);
     z-index: 2;
 }
-
 #search-button {
     padding: 12px 20px;
     font-size: 1em;
@@ -69,246 +64,253 @@ body {
 #search-button:hover {
     background-color: #0056b3;
 }
-
-/* --- 搜索建议下拉框 --- */
 .search-suggestions {
     position: absolute;
-    top: 100%; /* 定位在输入框下方 */
+    top: 100%;
     left: 0;
     right: 0;
     background-color: #fff;
     border: 1px solid #dfe1e5;
-    border-top: none; /* 避免与输入框边框重叠 */
+    border-top: none;
     border-radius: 0 0 8px 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    z-index: 99; /* 低于搜索栏，但高于页面其他内容 */
-    max-height: 200px; /* 限制最大高度，出现滚动条 */
+    z-index: 99;
+    max-height: 200px;
     overflow-y: auto;
-    display: none; /* 默认隐藏 */
+    display: none;
 }
-.search-suggestions ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.search-suggestions li {
-    padding: 10px 15px;
-    cursor: pointer;
-    font-size: 0.9em;
-    border-bottom: 1px solid #f0f0f0;
-}
-.search-suggestions li:last-child {
-    border-bottom: none;
-}
-.search-suggestions li:hover, .search-suggestions li.active {
-    background-color: #f0f2f5;
-    color: #007bff;
-}
-
+.search-suggestions ul { list-style: none; margin: 0; padding: 0; }
+.search-suggestions li { padding: 10px 15px; cursor: pointer; font-size: 0.9em; border-bottom: 1px solid #f0f0f0; }
+.search-suggestions li:last-child { border-bottom: none; }
+.search-suggestions li:hover, .search-suggestions li.active { background-color: #f0f2f5; color: #007bff; }
 
 .app-shell {
-    flex-grow: 1;
-    padding: 20px; /* 上下左右的内边距 */
+    flex-grow: 1;           /* 占据body中 .top-bar 之外的所有剩余垂直空间 */
+    padding: 20px;
     box-sizing: border-box;
     display: flex;
-    /* 移除 overflow: hidden; */
-    /* 将滚动控制交给 body 或此容器 */
-    overflow-y: auto; /* 如果内容超出 app-shell，则 app-shell 出现滚动条 */
-    /* 或者，如果希望整个 body 滚动，这里可以是 overflow: visible; html,body 上是 auto */
+    flex-direction: column; /* 使 .main-container 能在其中正确布局 */
+    overflow: hidden;       /* 防止 app-shell 自身意外出现滚动条 */
+    min-height: 0;          /* 已修改/确保: 对于包含可增长和可滚动内容的flex子项至关重要 */
 }
 
 .main-container {
     display: flex;
+    flex-direction: row;    /* 左侧图表区和右侧排行榜区水平排列 */
     width: 100%;
-    max-width: 1600px;
-    margin: 0 auto; /* 顶部间距由 app-shell 的 padding 处理 */
-    gap: 20px;
-    /* 移除 height: calc(100% - 20px); 和 overflow: hidden; */
-    /* 高度将由内容决定 */
+    max-width: 1600px;      /* 内容最大宽度 */
+    margin: 0 auto;         /* 水平居中 */
+    gap: 20px;              /* 左右两栏之间的间隙 */
+    flex-grow: 1;           /* 占据 .app-shell 中的所有剩余垂直空间 */
+    min-height: 0;          /* 关键: 允许其子元素（左右两栏）定义自己的滚动边界，而不会无限扩展此容器的高度 */
+    overflow: hidden;       /* 防止 .main-container 本身出现滚动条 */
 }
 
-.charts-container {
-    flex: 0 0 58%;
+.charts-section-left {
+    flex: 1 1 50%;          /* 占据大约50%的宽度，允许伸缩 */
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* 内部图表垂直排列 */
     gap: 15px;
-    /* 移除 height: 100%; 和 overflow-y: auto; */
-}
-
-.ranking-container {
-    flex: 0 0 40%;
-    background-color: #ffffff;
-    padding: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    border-radius: 12px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    /* 移除 height: 100%; 和 overflow: hidden; */
+    min-width: 300px;       /* 左侧最小宽度 */
+    /* 已修改: 移除 max-height 和 height:100%。
+       高度将由 .main-container 拉伸决定。
+       overflow-y: auto 将处理其内部图表内容过高时的情况。 */
+    overflow-y: auto;       /* 如果图表总高度超过分配空间，则此区域出现垂直滚动条 */
+    min-height: 0;          /* 对于可能包含增长项的flex列是个好习惯 */
 }
 
 .chart-wrapper {
     background-color: #ffffff;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    /* flex-grow: 1; /* 保持，但其效果会受限于父容器高度 */
-    min-height: 250px; /* 可以保持 */
-    /* overflow: hidden; /* 移除，图表内容不应导致自身滚动 */
+    flex-grow: 1;           /* 每个图表包装器尝试在 .charts-section-left 内增长 */
+    flex-shrink: 1;         /* 允许图表包装器收缩 */
+    min-height: 0;          /* 允许 .chart-wrapper 收缩，并让 .chart-canvas-container 增长 */
 }
+
+.chart-canvas-container {
+    flex-grow: 1;           /* 占据 .chart-wrapper 内标题之后的所有可用空间 */
+    position: relative;     /* Chart.js 画布需要 */
+    min-height: 180px;      /* 确保图表有一个最小的可见区域 */
+}
+
+canvas {
+    display: block;
+    width: 100% !important; /* 强制画布宽度充满其容器 */
+    height: 100% !important;/* 强制画布高度充满其容器 */
+}
+
+.ranking-section-right {
+    flex: 1 1 50%;          /* 占据大约50%的宽度，允许伸缩 */
+    background-color: #ffffff;
+    padding: 15px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    box-sizing: border-box;
+    display: flex;          /* 使用flex布局，使其子元素（标题, ranking-content）垂直排列 */
+    flex-direction: column;
+    min-width: 380px;       /* 右侧最小宽度 */
+    overflow: hidden;       /* 关键: 此部分本身不应滚动或显示滚动条 */
+    /* 已修改: 移除 height: 100%。
+       其高度将由父级 .main-container 拉伸决定 (flex项目的默认行为)。
+       下面的内部flex布局将处理内容和表格的滚动。 */
+    /* min-height: 0; 为保持一致性添加，确保在父flex上下文中需要时它可以收缩 */
+}
+
 h2, h3 {
     color: #2c3e50;
     margin-top: 0;
     text-align: center;
 }
-h2 { /* 排行榜标题 */
-    font-size: 1.5em;
-    margin-bottom: 15px;
+h2#ranking-container-title {
+    font-size: 1.4em;
+    margin-bottom: 10px;
     font-weight: 600;
-    flex-shrink: 0;
-    padding-bottom: 10px;
+    flex-shrink: 0;     /* 确保标题在下方内容很多时不会被压缩 */
+    padding-bottom: 8px;
     border-bottom: 1px solid #e9ecef;
-}
-.chart-wrapper h3 {
-    font-size: 1.2em;
-    margin-bottom: 15px;
-    font-weight: 500;
-    color: #34495e;
-    flex-shrink: 0;
-}
-
-.ranking-content {
-    /* flex-grow: 1; /* 可以保持 */
-    /* 移除 overflow-y: auto; 和 min-height: 0; */
-    /* 这里不再需要滚动条，滚动由 .app-shell 控制 */
-}
-/* 移除 .ranking-content 的滚动条样式 */
-
-/* 表格, 排序选项, 搜索结果等其他样式保持之前的优化 */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 0.9em;
-}
-th, td {
-    border-bottom: 1px solid #e9ecef;
-    padding: 12px 10px;
-    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
+.chart-wrapper h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #34495e;
+    flex-shrink: 0;     /* 确保图表标题不会被压缩 */
+}
+
+.sort-options {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;     /* 关键: 确保排序选项区域不会在表格需要空间时被压缩 */
+}
+.current-sort-info {
+    font-size: 0.8em;
+    color: #555;
+    margin-bottom: 8px;
+    flex-shrink: 0;     /* 关键: 确保当前排序信息区域不会被压缩 */
+}
+.sort-options label { font-weight: 500; color: #555; font-size: 0.85em; }
+.sort-options select, .sort-options button { padding: 7px 10px; border-radius: 5px; border: 1px solid #ced4da; font-family: 'Poppins', sans-serif; font-size: 0.85em; background-color: #fff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.sort-options select:focus, .sort-options button:focus { outline: none; border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+.sort-options button { background-color: #007bff; color: white; cursor: pointer; border-color: #007bff; font-weight: 500; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; }
+.sort-options button:hover { background-color: #0056b3; border-color: #0056b3; }
+
+
+.ranking-content {
+    flex-grow: 1;           /* 关键: 占据 .ranking-section-right 中，标题和排序选项之后的所有剩余垂直空间 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;       /* 关键: 确保内容（如表格包装器）尊重此边界，不溢出 */
+    min-height: 0;          /* 关键: 允许 .ranking-table-wrapper 收缩并启用其自身的滚动条 */
+}
+
+.ranking-table-wrapper {
+    flex-grow: 1;           /* 关键: 占据 .ranking-content 中的所有剩余垂直空间 */
+    overflow-y: auto;       /* 魔法发生的地方: 仅当其内容（表格）过高时，为此元素添加垂直滚动条 */
+    overflow-x: hidden;     /* 防止此包装器本身出现水平滚动条 */
+    min-height: 0;          /* 关键: 允许此flex项目实际启用其内部的溢出滚动 */
+    padding-right: 5px;     /* 为滚动条留出一点空间，避免与内容重叠，可根据需要调整或移除 */
+    /* box-sizing: content-box; 如果使用padding-right，并且表格宽度设置导致问题，可能需要这个 */
+}
+
+.scrollable-item-name {
+    max-width: none;        /* 允许其内容决定宽度 */
+    width: 100%;            /* 占据单元格全部宽度 */
+    overflow-x: auto;       /* 如果项目名称过长，则出现水平滚动条 */
+    white-space: nowrap;    /* 防止长名称换行 */
+    padding: 1px 0;         /* 微调滚动条与文本的间距 */
+}
+.scrollable-item-name a {
+    display: inline-block;  /* 确保链接能正确处理滚动 */
+}
+.scrollable-item-name::-webkit-scrollbar { height: 5px; } /* 自定义横向滚动条样式 (Webkit) */
+.scrollable-item-name::-webkit-scrollbar-thumb { background-color: #c1c1c1; border-radius: 2.5px; }
+.scrollable-item-name::-webkit-scrollbar-track { background-color: #f5f5f5; }
+
+
+table {
+    /* 使表格比其包装器略窄，以吸收悬停缩放效果带来的微小宽度增加 */
+    width: calc(100% - 8px); /* 例如，比 .ranking-table-wrapper 窄8px，防止 tr:hover 放大时溢出 */
+    margin-left: auto;       /* 如果表格略窄，使其在包装器内居中 */
+    margin-right: auto;
+
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 0.85em;
+    table-layout: fixed;    /* 固定表格布局，列宽由th/td的width属性控制 */
+}
+
+th, td {
+    border-bottom: 1px solid #e9ecef;
+    padding: 8px 5px;
+    text-align: left;
+    overflow: hidden;       /* 对于非项目名称列，隐藏溢出内容 */
+    text-overflow: ellipsis;/* 对于非项目名称列，用省略号显示溢出 */
+}
+
+/* 列宽分布 */
+th:nth-child(1), td:nth-child(1) { width: 8%; text-align: center; white-space: nowrap; } /* 排名 */
+th:nth-child(2), td:nth-child(2) { width: 57%; } /* 项目名称 - 允许其内部的.scrollable-item-name处理溢出 */
+th:nth-child(3), td:nth-child(3) { width: 15%; white-space: nowrap;} /* 价格 (元) */
+th:nth-child(4), td:nth-child(4) { width: 10%; text-align: center; white-space: nowrap;} /* 规格分 */
+th:nth-child(5), td:nth-child(5) { width: 10%; text-align: center; white-space: nowrap;} /* 评论分 */
+
+td:nth-child(2) {
+    overflow: visible; /* 允许项目名称列的内容（.scrollable-item-name）溢出并自行处理滚动 */
+    text-overflow: clip; /* 取消父级td的省略号，交由内部div处理 */
+}
+
+/* 除项目名称列外，其他列内容不换行 */
+td:not(:nth-child(2)) {
+     white-space: nowrap;
+}
+
+
 th {
     background-color: #f8f9fa;
     color: #495057;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.85em;
-    position: sticky; /* 表头依然可以粘性定位，但 top 值可能需要调整，相对于 .app-shell */
-    top: 0; /* 如果 .app-shell 滚动，这个 top:0 是相对于 .app-shell 的视口 */
-    z-index: 1;
+    font-size: 0.8em;
+    position: sticky;   /* 关键: 使表头在滚动 .ranking-table-wrapper 时固定在其顶部 */
+    top: 0;             /* 固定在滚动容器的顶部 */
+    z-index: 1;         /* 确保表头在表格内容之上，避免被覆盖 */
 }
 tbody tr {
     opacity: 1;
-    transform: scale(1);
     transition: background-color 0.3s ease, opacity 0.4s ease, transform 0.3s ease-out;
 }
-tbody tr:nth-child(even) {
-    background-color: #fdfdfd;
-}
+tbody tr:nth-child(even) { background-color: #fdfdfd; } /* 斑马条纹 */
 tbody tr:hover {
     background-color: #e9f5ff;
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
-    z-index: 2;
-    position: relative;
-}
-.fade-out {
-    opacity: 0;
-    transform: scale(0.95);
-}
-.fade-in {
-    opacity: 1;
-    transform: scale(1);
+    transform: scale(1.01); /* 悬停时轻微放大，注意不要因此导致布局问题 */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+    z-index: 2;             /* 确保悬停行在其他行之上 */
+    position: relative;     /* 配合z-index和transform */
 }
 
-.sort-options {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-}
-.sort-options label {
-    font-weight: 500;
-    color: #555;
-    font-size: 0.9em;
-}
-.sort-options select, .sort-options button {
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9em;
-    background-color: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.sort-options select:focus, .sort-options button:focus {
-    outline: none;
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-}
-.sort-options button {
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    border-color: #007bff;
-    font-weight: 500;
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-.sort-options button:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-}
-.current-sort-info {
-    font-size: 0.85em;
-    color: #555;
-    margin-bottom: 10px;
-    flex-shrink: 0;
-}
-.current-sort-info strong {
-    color: #007bff;
-}
-.chart-canvas-container {
-    flex-grow: 1;
-    position: relative;
-    /* min-height: 0; /* 可以移除或保留，但父容器高度不再固定 */
-}
-canvas {
-    display: block;
-    max-width: 100%;
-    /* max-height: 100%; /* 移除，让 canvas 高度自适应内容 */
-}
-.item-name-link {
-    color: #007bff;
-    text-decoration: none;
-    font-weight: 500;
-}
-.item-name-link:hover {
-    text-decoration: underline;
-    color: #0056b3;
-}
+.fade-out { opacity: 0; transform: scale(0.95); } /* JS动态更新表格时的淡出效果 */
+.fade-in { opacity: 1; transform: scale(1); }   /* JS动态更新表格时的淡入效果 */
 
-/* --- 搜索结果样式 (ranking-container 内的) --- */
-#search-results-display-area { /* 用于替换排行榜表格的区域 */
-    /* max-height: calc(100% - 120px); /* 这个可能不再需要，因为父容器会滚动 */
-    /* overflow-y: auto; /* 移除，滚动由 app-shell 处理 */
+.item-name-link { color: #007bff; text-decoration: none; font-weight: 500; }
+.item-name-link:hover { text-decoration: underline; color: #0056b3; }
+
+#search-results-display-area {
     border-top: 1px solid #e9ecef;
     padding-top: 10px;
+    flex-grow: 1;       /* 当搜索结果显示时，占据可用空间 */
+    overflow-y: auto;   /* 如果搜索结果过多，允许滚动 */
+    display: none;      /* 默认隐藏 */
 }
-
 .search-result-item {
     background-color: #fff;
     border: 1px solid #e0e0e0;
@@ -317,8 +319,8 @@ canvas {
     margin-bottom: 12px;
     cursor: pointer;
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.3s ease-in-out;
-    opacity: 0;
-    transform: translateY(10px);
+    opacity: 0; /* 初始透明，用于JS动画 */
+    transform: translateY(10px); /* 初始下移，用于JS动画 */
 }
 .search-result-item:hover {
     transform: translateY(-2px) scale(1.01);
@@ -331,17 +333,27 @@ canvas {
 .search-result-item .scores .label { font-weight: 500; color: #333; }
 .search-result-item .scores .value { color: #007bff; }
 
-.ranking-container.search-active .ranking-table-wrapper,
-.ranking-container.search-active .sort-options,
-.ranking-container.search-active .current-sort-info {
+/* 当搜索激活时，隐藏排行榜表格和排序选项 */
+.ranking-section-right.search-active .ranking-table-wrapper,
+.ranking-section-right.search-active .sort-options,
+.ranking-section-right.search-active .current-sort-info {
     display: none;
 }
-.ranking-container.search-active #search-results-display-area {
-    display: block;
+/* 当搜索激活时，显示搜索结果区域 */
+.ranking-section-right.search-active #search-results-display-area {
+    display: block; /* 或者 flex, 取决于其内部布局需求 */
 }
-#search-results-display-area:not(:empty) { /* 只有当搜索结果区有内容时才显示 */
-    display: block;
-}
-#search-results-display-area:empty {
-    display: none;
+/* 确保即使JS未及时更新，空的搜索结果区域也不显示 */
+/* #search-results-display-area:not(:empty) { display: block; } */
+/* #search-results-display-area:empty { display: none; } */ /* 这两个可以被JS更精确地控制 */
+
+.error-message {
+    color: red;
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 8px;
+    margin: 20px;
 }
