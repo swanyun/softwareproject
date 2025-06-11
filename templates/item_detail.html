@@ -15,11 +15,11 @@
             <div class="item-info-main">
                 <div class="info-block">
                     <span class="label">品牌</span>
-                    <span class="value brand">{{ item.brand if item.brand and item.brand|string|lower != 'none' and item.brand|string|lower != 'null' else '--' }}</span>
+                    <span class="value brand">{{ item.brand if item.brand and item.brand|string|lower not in ['none', 'null'] else '--' }}</span>
                 </div>
                 <div class="info-block">
                     <span class="label">类别</span>
-                    <span class="value category">{{ item.category if item.category and item.category|string|lower != 'none' and item.category|string|lower != 'null' else '--' }}</span>
+                    <span class="value category">{{ item.category if item.category and item.category|string|lower not in ['none', 'null'] else '--' }}</span>
                 </div>
             </div>
              <div class="item-info-scores">
@@ -47,7 +47,7 @@
                     <span class="label">评论评分</span>
                     <span class="value score">
                         {% if item.review_score is not none %}
-                            {{ "%.1f"|format(item.review_score) }}/5
+                            {{ "%.1f"|format(item.review_score) }}/10
                         {% else %}
                             --
                         {% endif %}
@@ -61,60 +61,125 @@
             <div class="product-specs">
                 <h3>详细规格</h3>
                 <ul class="specs-list">
-                    <li><strong>商品ID:</strong> {{ item.id if item.id else '--' }}</li>
-                    <li><strong>发布日期:</strong> {{ item.release_date if item.release_date and item.release_date|string|lower != 'none' and item.release_date|string|lower != 'null' else '--' }}</li>
-                    <li><strong>产品尺寸:</strong> {{ item.dimensions if item.dimensions and item.dimensions|string|lower != 'none' and item.dimensions|string|lower != 'null' else '--' }}</li>
-                    <li><strong>产品重量:</strong> {{ item.weight if item.weight and item.weight|string|lower != 'none' and item.weight|string|lower != 'null' else '--' }}</li>
-                    <li><strong>主要材质:</strong> {{ item.material if item.material and item.material|string|lower != 'none' and item.material|string|lower != 'null' else '--' }}</li>
-                    <li><strong>LAN输出口:</strong> {{ item.lan_output if item.lan_output and item.lan_output|string|lower != 'none' and item.lan_output|string|lower != 'null' else '--' }}</li>
-                    <li><strong>天线:</strong> {{ item.antenna if item.antenna and item.antenna|string|lower != 'none' and item.antenna|string|lower != 'null' else '--' }}</li>
-                    <li><strong>WAN接入口:</strong> {{ item.wan_input if item.wan_input and item.wan_input|string|lower != 'none' and item.wan_input|string|lower != 'null' else '--' }}</li>
-                    <li><strong>供电方式:</strong> {{ item.power_supply if item.power_supply and item.power_supply|string|lower != 'none' and item.power_supply|string|lower != 'null' else '--' }}</li>
-                    <li><strong>LAN口数量:</strong> {{ item.lan_ports_count if item.lan_ports_count and item.lan_ports_count|string|lower != 'none' and item.lan_ports_count|string|lower != 'null' else '--' }}</li>
-                    <li><strong>企业VPN:</strong> {{ item.vpn_support if item.vpn_support and item.vpn_support|string|lower != 'none' and item.vpn_support|string|lower != 'null' else '--' }}</li>
-                    <li>
-                        <strong>主要特性:</strong>
-                        {% if item.features and item.features|length > 0 %}
-                        <ul>
-                            {% for feature in item.features %}
-                                <li>{{ feature }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                            --
-                        {% endif %}
-                    </li>
-                    <li><strong>包装清单:</strong>
-                        <p style="white-space: pre-wrap;">{{ item.packaging_list if item.packaging_list and item.packaging_list|string|lower != 'none' and item.packaging_list|string|lower != 'null' else '--' }}</p>
-                    </li>
+                    {% if item.id %}
+                        <li><strong>商品ID:</strong> {{ item.id }}</li>
+                        <!-- 【新增】商品链接 -->
+                        <li>
+                            <strong>商品链接:</strong>
+                            <a href="https://item.jd.com/{{ item.id }}.html" target="_blank" rel="noopener noreferrer">
+                                点击跳转到京东页面
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if item.model and item.model|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>型号:</strong> {{ item.model }}</li>
+                    {% endif %}
+                    {% if item.release_date and item.release_date|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>发布日期:</strong> {{ item.release_date }}</li>
+                    {% endif %}
+
+                    {% if item.dimensions and item.dimensions|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>产品尺寸:</strong> {{ item.dimensions }}</li>
+                    {% endif %}
+                    {% if item.weight and item.weight|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>产品重量:</strong> {{ item.weight }} kg</li>
+                    {% endif %}
+                    {% if item.material and item.material|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>主要材质:</strong> {{ item.material }}</li>
+                    {% endif %}
+                    {% if item.cooling_method and item.cooling_method|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>散热方式:</strong> {{ item.cooling_method }}</li>
+                    {% endif %}
+
+                    {% if item.lan_ports_count and item.lan_ports_count|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>LAN口数量:</strong> {{ item.lan_ports_count }}</li>
+                    {% endif %}
+                    {% if item.wan_ports_count and item.wan_ports_count|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>WAN口数量:</strong> {{ item.wan_ports_count }}</li>
+                    {% endif %}
+                    {% if item.lan_port_type and item.lan_port_type|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>LAN口类型:</strong> {{ item.lan_port_type }}</li>
+                    {% endif %}
+                    {% if item.wan_port_type and item.wan_port_type|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>WAN口类型:</strong> {{ item.wan_port_type }}</li>
+                    {% endif %}
+                    {% if item.lan_output and item.lan_output|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>LAN输出口:</strong> {{ item.lan_output }}</li>
+                    {% endif %}
+                    {% if item.wan_input and item.wan_input|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>WAN接入口:</strong> {{ item.wan_input }}</li>
+                    {% endif %}
+                     {% if item.other_ports and item.other_ports|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>其他端口:</strong> {{ item.other_ports }}</li>
+                    {% endif %}
+                    {% if item.has_usb and item.has_usb|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>是否带USB:</strong> {{ item.has_usb }}</li>
+                    {% endif %}
+
+                    {% if item.wireless_protocol and item.wireless_protocol|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>无线协议:</strong> {{ item.wireless_protocol }}</li>
+                    {% endif %}
+                    {% if item.wireless_rate and item.wireless_rate|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>无线速率:</strong> {{ item.wireless_rate }}</li>
+                    {% endif %}
+                    {% if item.frequency_band and item.frequency_band|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>适用频段:</strong> {{ item.frequency_band }}</li>
+                    {% endif %}
+                    {% if item.antenna and item.antenna|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>天线:</strong> {{ item.antenna }}</li>
+                    {% endif %}
+                    {% if item.fem_amplifier and item.fem_amplifier|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>FEM信号放大器:</strong> {{ item.fem_amplifier }}</li>
+                    {% endif %}
+                    {% if item.supports_mesh and item.supports_mesh|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>是否支持Mesh:</strong> {{ item.supports_mesh }}</li>
+                    {% endif %}
+
+                    {% if item.vpn_support and item.vpn_support|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>企业VPN:</strong> {{ item.vpn_support }}</li>
+                    {% endif %}
+                    {% if item.firewall_support and item.firewall_support|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>防火墙:</strong> {{ item.firewall_support }}</li>
+                    {% endif %}
+                    {% if item.app_control and item.app_control|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>APP控制:</strong> {{ item.app_control }}</li>
+                    {% endif %}
+                    {% if item.behavior_management and item.behavior_management|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>上网行为管理:</strong> {{ item.behavior_management }}</li>
+                    {% endif %}
+
+                    {% if item.applicable_area and item.applicable_area|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>适用面积:</strong> {{ item.applicable_area }}</li>
+                    {% endif %}
+                    {% if item.capacity and item.capacity|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>总带机量:</strong> {{ item.capacity }}</li>
+                    {% endif %}
+                    {% if item.power_supply and item.power_supply|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li><strong>供电方式:</strong> {{ item.power_supply }}</li>
+                    {% endif %}
+                    {% if item.packaging_list and item.packaging_list|string|lower not in ['none', 'null', '--', '无'] %}
+                        <li>
+                            <strong>包装清单:</strong>
+                            <p style="white-space: pre-wrap;">{{ item.packaging_list }}</p>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
 
+        <!-- 【修改】评论区 -->
         <div class="reviews-section">
-            <h2>用户评价 (示例)</h2>
+            <h2>用户评价</h2>
             <div class="reviews-container">
-                <div class="review-column good-reviews">
-                    <h3>好评反馈 ({{ item.good_reviews|length if item.good_reviews else '0' }})</h3>
+                <div class="review-column">
+                    <h3>用户评论 ({{ item.db_reviews|length if item.db_reviews else '0' }})</h3>
                     <ul class="review-list">
-                        {% if item.good_reviews %}
-                            {% for review in item.good_reviews %}
+                        {% if item.db_reviews %}
+                            {% for review in item.db_reviews %}
                                 <li>{{ review }}</li>
                             {% endfor %}
                         {% else %}
-                            <li>暂无好评</li>
-                        {% endif %}
-                    </ul>
-                </div>
-                <div class="review-column bad-reviews">
-                    <h3>待改进 ({{ item.bad_reviews|length if item.bad_reviews else '0' }})</h3>
-                    <ul class="review-list">
-                        {% if item.bad_reviews %}
-                            {% for review in item.bad_reviews %}
-                                <li>{{ review }}</li>
-                            {% endfor %}
-                        {% else %}
-                            <li>暂无此类反馈</li>
+                            <li>暂无用户评论</li>
                         {% endif %}
                     </ul>
                 </div>
