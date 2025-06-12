@@ -40,12 +40,9 @@ def generate_review_placeholders(item_name):
 def fetch_data_from_db():
     """连接数据库，查询所有商品数据，并进行处理和计算"""
 
-    # ---【新增】定义一个清理函数，移除所有控制字符 ---
     def clean_string(s):
         if s is None:
             return None
-        # 移除换行、回车、制表符等，并去除首尾空格
-        # 使用 repr() 来处理更复杂的控制字符，然后去掉首尾的单引号
         return str(s).replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
 
     items = []
@@ -72,7 +69,18 @@ def fetch_data_from_db():
             if not item_id:
                 continue
 
-            # ---【核心修改】对所有可能包含控制字符的文本字段进行清理 ---
+            # 【新增】将所有七项核心分数添加到字典中，方便后续统一处理
+            # 确保即使数据库中为NULL，也能得到None
+            scores_for_item = {
+                'signal_score': row.get('signal_score'),
+                'performance': row.get('performance'),
+                'stability': row.get('stability'),
+                'usability': row.get('usability'),
+                'hardware': row.get('hardware'),
+                'service': row.get('service'),
+                'cost_effectiveness': row.get('cost_effectiveness')
+            }
+
             item_name_cleaned = clean_string(row.get('title'))
             review_placeholders = generate_review_placeholders(item_name_cleaned)
 
@@ -82,12 +90,11 @@ def fetch_data_from_db():
             ]
             actual_db_reviews = [clean_string(review) for review in db_reviews_list if review and clean_string(review)]
 
-            # 分数计算
             spec_scores_to_sum = [
-                row.get('signal_score'), row.get('performance'), row.get('stability'),
-                row.get('usability'), row.get('hardware'),
+                scores_for_item['signal_score'], scores_for_item['performance'], scores_for_item['stability'],
+                scores_for_item['usability'], scores_for_item['hardware'],
             ]
-            review_scores_to_sum = [row.get('service'), row.get('cost_effectiveness')]
+            review_scores_to_sum = [scores_for_item['service'], scores_for_item['cost_effectiveness']]
 
             valid_review_scores = [float(s) for s in review_scores_to_sum if s is not None]
             review_score_avg = sum(valid_review_scores) / len(valid_review_scores) if valid_review_scores else 0.0
@@ -95,7 +102,6 @@ def fetch_data_from_db():
             valid_spec_scores = [float(s) for s in spec_scores_to_sum if s is not None]
             spec_score_avg = sum(valid_spec_scores) / len(valid_spec_scores) if valid_spec_scores else 0.0
 
-            # 数据清洗
             try:
                 price_str = row.get('price')
                 price = float(''.join(filter(lambda x: x.isdigit() or x == '.', str(price_str)))) if price_str else 0.0
@@ -111,9 +117,7 @@ def fetch_data_from_db():
             category_cleaned = clean_string(row.get('类型')) if clean_string(row.get('类型')) else clean_string(
                 row.get('类别'))
 
-            # 将所有需要展示的字段都添加到字典中
-            items.append({
-                # 基本信息
+            item_dict = {
                 "id": item_id,
                 "name": item_name_cleaned,
                 "price": price,
@@ -123,14 +127,10 @@ def fetch_data_from_db():
                 "category": category_cleaned,
                 "model": clean_string(row.get('型号')),
                 "release_date": clean_string(row.get('上市时间')),
-
-                # 物理规格
                 "dimensions": clean_string(row.get('产品尺寸')),
                 "weight": row.get('产品净重（kg）'),
                 "material": clean_string(row.get('机身材质')),
                 "cooling_method": clean_string(row.get('散热方式')),
-
-                # 端口信息
                 "lan_output": clean_string(row.get('LAN输出口')),
                 "wan_input": clean_string(row.get('WAN接入口')),
                 "lan_ports_count": row.get('LAN口数量'),
@@ -139,35 +139,28 @@ def fetch_data_from_db():
                 "wan_port_type": clean_string(row.get('WAN口类型')),
                 "other_ports": clean_string(row.get('其他端口')),
                 "has_usb": clean_string(row.get('是否带USB')),
-
-                # 无线性能
                 "wireless_protocol": clean_string(row.get('无线协议')),
                 "wireless_rate": clean_string(row.get('无线速率')),
                 "frequency_band": clean_string(row.get('适用频段')),
                 "antenna": clean_string(row.get('天线')),
                 "fem_amplifier": clean_string(row.get('FEM信号放大器')),
                 "supports_mesh": clean_string(row.get('是否支持Mesh')),
-
-                # 软件与服务
                 "vpn_support": clean_string(row.get('企业VPN')),
                 "firewall_support": clean_string(row.get('防火墙')),
                 "app_control": clean_string(row.get('APP控制')),
                 "behavior_management": clean_string(row.get('上网行为管理')),
-
-                # 其他
                 "applicable_area": clean_string(row.get('适用面积')),
                 "capacity": clean_string(row.get('总带机量')),
                 "power_supply": clean_string(row.get('供电方式')),
                 "packaging_list": clean_string(row.get('packaging_list')),
-
-                # 评论数据
                 "db_reviews": actual_db_reviews,
                 "good_reviews": review_placeholders['good_reviews'],
                 "bad_reviews": review_placeholders['bad_reviews'],
-
-                # 保留原始特性列表以防万一
                 "features": db_features_list[:5],
-            })
+            }
+            # 将七项核心分数合并到主字典中
+            item_dict.update(scores_for_item)
+            items.append(item_dict)
 
     except mysql.connector.Error as err:
         print(f"连接MySQL或获取数据时出错: {err}")
@@ -181,9 +174,48 @@ def fetch_data_from_db():
     return items
 
 
+# --- 【新增】计算所有项目的平均分 ---
+def calculate_average_scores(items):
+    if not items:
+        return {}
+
+    score_keys = [
+        'signal_score', 'performance', 'stability', 'usability',
+        'hardware', 'service', 'cost_effectiveness'
+    ]
+
+    score_sums = {key: 0.0 for key in score_keys}
+    score_counts = {key: 0 for key in score_keys}
+
+    for item in items:
+        for key in score_keys:
+            # 确保分数是有效的数值类型
+            try:
+                score = item.get(key)
+                if score is not None:
+                    # 尝试将 Decimal 等类型转为 float
+                    score_float = float(score)
+                    score_sums[key] += score_float
+                    score_counts[key] += 1
+            except (ValueError, TypeError):
+                # 如果转换失败，则忽略此值
+                continue
+
+    average_scores = {}
+    for key in score_keys:
+        if score_counts[key] > 0:
+            average_scores[key] = round(score_sums[key] / score_counts[key], 2)
+        else:
+            average_scores[key] = 0.0
+
+    return average_scores
+
+
 # --- 数据加载 ---
 ITEM_DATA = fetch_data_from_db()
 ITEMS_BY_ID = {item['id']: item for item in ITEM_DATA}
+# 【新增】调用函数计算并存储平均分
+AVERAGE_SCORES = calculate_average_scores(ITEM_DATA)
 
 
 # --- Flask 路由 ---
@@ -284,7 +316,8 @@ def item_detail(item_id):
     if not item:
         abort(404)
     back_url = url_for('index')
-    return render_template('item_detail.html', item=item, back_url=back_url)
+    # 【修改】将平均分数据也传递给模板
+    return render_template('item_detail.html', item=item, average_scores=AVERAGE_SCORES, back_url=back_url)
 
 
 # --- 应用启动 ---

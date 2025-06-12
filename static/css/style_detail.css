@@ -278,3 +278,47 @@ h1 {
         font-size: 1.4em;
     }
 }
+.chart-section {
+    background-color: #ffffff;
+    padding: 20px 25px;
+    margin-bottom: 30px; /* 增加与下方规格区的间距 */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* 统一阴影风格 */
+    border: 1px solid #e9ecef;
+}
+
+.chart-section h2 {
+    font-size: 1.6em;
+    color: #34495e;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: left;
+    border-bottom: 2px solid #28a745; /* 图表区标题用绿色下划线 */
+    padding-bottom: 8px;
+}
+
+.chart-canvas-container {
+    position: relative;
+    height: 400px; /* 您可以根据需要调整高度 */
+    width: 100%;
+    max-width: 550px; /* 限制最大宽度，防止在宽屏上过大 */
+    margin: 0 auto; /* 居中显示 */
+}
+
+/* 响应式调整 for chart */
+@media (max-width: 768px) {
+    .chart-section h2 {
+        font-size: 1.4em;
+    }
+    .chart-canvas-container {
+        height: 350px; /* 小屏幕上稍微减小高度 */
+    }
+}
+@media (max-width: 480px) {
+    .chart-section {
+        padding: 15px;
+    }
+    .chart-canvas-container {
+        height: 300px; /* 更小屏幕上进一步减小高度 */
+    }
+}

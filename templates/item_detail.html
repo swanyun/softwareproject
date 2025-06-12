@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ item.name if item.name else "商品详情" }} - 商品详情</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_detail.css') }}">
 </head>
@@ -12,6 +13,7 @@
         <h1>{{ item.name if item.name else '-- 无标题 --' }}</h1>
 
         <div class="item-summary">
+            <!-- ... item-summary 内容保持不变 ... -->
             <div class="item-info-main">
                 <div class="info-block">
                     <span class="label">品牌</span>
@@ -56,6 +58,14 @@
             </div>
         </div>
 
+        <div class="chart-section">
+            <h2>性能雷达图</h2>
+            <div class="chart-canvas-container">
+                <canvas id="performanceRadarChart"></canvas>
+            </div>
+        </div>
+
+
         <div class="product-details-section">
             <h2>产品规格</h2>
             <div class="product-specs">
@@ -63,7 +73,6 @@
                 <ul class="specs-list">
                     {% if item.id %}
                         <li><strong>商品ID:</strong> {{ item.id }}</li>
-                        <!-- 【新增】商品链接 -->
                         <li>
                             <strong>商品链接:</strong>
                             <a href="https://item.jd.com/{{ item.id }}.html" target="_blank" rel="noopener noreferrer">
@@ -71,6 +80,7 @@
                             </a>
                         </li>
                     {% endif %}
+                    <!-- ... 其他规格列表项 ... -->
                     {% if item.model and item.model|string|lower not in ['none', 'null', '--', '无'] %}
                         <li><strong>型号:</strong> {{ item.model }}</li>
                     {% endif %}
@@ -167,8 +177,8 @@
             </div>
         </div>
 
-        <!-- 【修改】评论区 -->
         <div class="reviews-section">
+            <!-- ... reviews-section 内容保持不变 ... -->
             <h2>用户评价</h2>
             <div class="reviews-container">
                 <div class="review-column">
@@ -190,5 +200,76 @@
     <div class="back-button-container">
         <a href="{{ back_url }}" class="back-button">返回列表</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const itemData = {{ item | tojson }};
+            const averageData = {{ average_scores | tojson }};
+
+            const labels = ['信号', '性能', '稳定性', '易用性', '硬件', '服务', '性价比'];
+            const keys = ['signal_score', 'performance', 'stability', 'usability', 'hardware', 'service', 'cost_effectiveness'];
+
+            const currentItemScores = keys.map(key => itemData[key] || 0);
+            const averageScores = keys.map(key => averageData[key] || 0);
+
+            const ctx = document.getElementById('performanceRadarChart');
+            if(ctx) {
+                new Chart(ctx.getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '本项目',
+                                data: currentItemScores,
+                                fill: true,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgb(255, 99, 132)',
+                                pointBackgroundColor: 'rgb(255, 99, 132)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(255, 99, 132)'
+                            },
+                            {
+                                label: '所有项目平均值',
+                                data: averageScores,
+                                fill: true,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgb(75, 192, 192)',
+                                pointBackgroundColor: 'rgb(75, 192, 192)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(75, 192, 192)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                // 【核心修改】调整坐标轴范围以放大差异
+                                min: 6.5,               // 设置坐标轴的最小值为 5
+                                suggestedMax: 10,     // 建议最大值为 10
+                                pointLabels: {
+                                    font: {
+                                        size: 14
+                                    }
+                                },
+                                ticks: {
+                                    backdropColor: 'rgba(255, 255, 255, 0.75)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
